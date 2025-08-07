@@ -4,6 +4,8 @@ const billingModel = mongoose.Schema(
   {
     userId: { type: String, required: false }, // User ID associated with the billing record
     userMRN: { type: String, required: true }, // User ID associated with the billing record
+    invoiceNumber: { type: String, required: true }, // Unique invoice number for the billing record
+    invoiceDate: { type: Date, default: Date.now }, // Date of the invoice
     billingDetailsId: { type: String, required: true }, // User ID associated with the billing record
     billingType: { type: String, required: true }, 
     amount: { type: Number, required: true }, // Amount to be billed
