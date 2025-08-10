@@ -7,6 +7,8 @@ let billingItemsSchema = mongoose.Schema({
     unitPrice: { type: mongoose.Schema.Types.Decimal128, required: true },
     totalPrice: { type:mongoose.Schema.Types.Decimal128, required: true },
     tax: { type: mongoose.Schema.Types.Decimal128, default: 0 }, // Tax applied to the billing particulars
+    taxPercent: { type: String, default: 0 }, // Tax applied to the billing particulars
+    discountPercent: { type: String, default: 0 }, // Tax applied to the billing particulars
     discount: { type: mongoose.Schema.Types.Decimal128, default: 0 }, // Discount applied to the
     category: { type: mongoose.Schema.Types.ObjectId, ref: billingCategoryModel, required: true }, // Reference to billing category
     createdBy: { type: String, required: false }, // User who created the billing particulars

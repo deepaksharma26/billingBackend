@@ -182,7 +182,7 @@ router.get('/user/:userId', authMiddleware, async (req, res) => {
     try {
         const billingDetails = await billingDetailsModel.find({ userId })
             // .populate('billingDetails.billingItems', 'name quantity unitPrice totalPrice description tax discount')
-            // .populate('category', 'name')
+            .populate('category', 'name')
             // .populate('financialYear', 'year')
             // .populate('paymentMethod', 'name')
             // .populate('createdBy', 'username')

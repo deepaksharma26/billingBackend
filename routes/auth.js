@@ -42,6 +42,8 @@ router.post('/login', async(req, res) => {
     const user = await User.findOne({ username: username });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }else if(!user?.isActive){
+      return res.status(403).json({ message: 'User is inactive' });
     }
     // Compare password with hashed password
     const isMatch = await bcrypt.compare(password, user.password);
@@ -65,7 +67,7 @@ router.post('/login', async(req, res) => {
 
         } }, secret, { expiresIn: process.env.JWT_EXPIRATION || '12h' }); // Set token expiration time
     // Update user's token in the database
-    const updateToken = await User.updateOne({ username: user.username }, { $set: { token: token } });
+    const updateToken = await User.updateOne({ username: user.username }, { $set: { token: token, lastLogin: Date.now() } });
     if (updateToken.modifiedCount === 0) {
       console.error('Token update failed for user:', username);
       return res.status(500).json({ message: 'Token update failed' });
@@ -96,7 +98,8 @@ router.post('/register', async (req, res) => {
         mobilenumber: req.body.mobilenumber,
         status: status || false, // Default to false if not provided
         role: role || 0, // Default to 0 (user) if not provided
-        createdBy: createdBy,
+        createdBy: req.user ? req.user.id : 'self', // Assuming req.user contains the authenticated user's info
+        createdAt: new Date(),
         username: username,
         password: hashedPassword
         });

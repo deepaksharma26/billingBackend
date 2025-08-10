@@ -6,9 +6,9 @@ const { create } = require('../model/userRoleModel');
 // Create a new billing item
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { name, description, quantity, unitPrice, totalPrice, tax, discount, category } = req.body;
+        const { name, description, quantity, unitPrice, tax, taxPercent, discount, discountPercent, category, finalAmount } = req.body;
         // Validate required fields
-        if (!name || !quantity || !unitPrice || !totalPrice || !category) {
+        if (!name || !quantity || !unitPrice || !finalAmount || !category) {
             return res.status(400).json({ message: 'All fields are required' });
         }
         // Create a new billing item document
@@ -17,11 +17,13 @@ router.post('/', authMiddleware, async (req, res) => {
             description,
             quantity,
             unitPrice,
-            totalPrice: (((unitPrice * quantity) + tax) - discount), // Calculate total price based on unit price and quantity
+            totalPrice: finalAmount, // Calculate total price based on unit price and quantity
             tax: tax || 0,
+            discountPercent: discountPercent || 0, // Assuming discount is a percentage
+            taxPercent: taxPercent || 0, // Assuming taxPercent is provided in the request
             discount: discount || 0,
             category,
-            createdBy: req.user._id, 
+            createdBy: req.user.id,
             createdAt: new Date(),
         });
         // Save the billing item to the database
@@ -41,9 +43,8 @@ router.get('/', authMiddleware, async (req, res) => {
         console.error('Error fetching billing items:', error);
         res.status(500).json({ message: 'Server error' });
     }
-}
-
-);
+}); 
+ 
 // Get a billing item by ID
 router.get('/:id', authMiddleware, async (req, res) => {
     const billingItemId = req.params.id;
@@ -59,9 +60,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
     }
 });
 // Update a billing item by ID
-router.put('/:id', authMiddleware, async (req, res) => {    
+router.put('/:id', authMiddleware, async (req, res) => {
     const billingItemId = req.params.id;
-    const { name, description, quantity, unitPrice, totalPrice, tax, discount, category } = req.body;
+    const { name, description, quantity, unitPrice, finalAmount, tax, taxPercent, discount, discountPercent, category } = req.body;
     try {
         // Find billing item by ID and update
         const updatedBillingItem = await billingItemsModel.findByIdAndUpdate(billingItemId, {
@@ -69,11 +70,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
             description,
             quantity,
             unitPrice,
-            totalPrice,
+            totalPrice: finalAmount,
             tax: tax || 0,
+            taxPercent: taxPercent || 0, // Assuming taxPercent is provided in the request
+            discountPercent: discountPercent || 0, // Assuming discountPercent is provided in the request
             discount: discount || 0,
             category,
-            updatedBy: req.user._id // Assuming request.user contains the authenticated user's info
+            updatedBy: req.user.id // Assuming request.user contains the authenticated user's info
         }, { new: true });
         if (!updatedBillingItem) {
             return res.status(404).json({ message: 'Billing item not found' });
@@ -98,6 +101,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
         console.error('Error deleting billing item:', error);
         res.status(500).json({ message: 'Server error' });
     }
-}   
+}
 );
 module.exports = router; // Export the billing items routes
