@@ -42,7 +42,7 @@ router.post('/login', async(req, res) => {
     const user = await User.findOne({ username: username });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }else if(!user?.isActive){
+    }else if(user?.isActive == false){
       return res.status(403).json({ message: 'User is inactive' });
     }
     // Compare password with hashed password

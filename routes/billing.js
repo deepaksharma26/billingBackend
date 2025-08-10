@@ -219,12 +219,7 @@ router.get('/', authMiddleware, async (req, res) => {
     console.log('Fetching all billing details', req.user);
     try {
         const billingDetails = await billingDetailsModel.find({})
-            // .populate('billingDetails.billingItems', 'name quantity unitPrice totalPrice description tax discount')
-            // .populate('category', 'name')
-            // .populate('financialYear', 'year')
-            // .populate('paymentMethod', 'name')
-            // .populate('createdBy', 'username')
-            // .populate('updatedBy', 'username');
+            .sort({ createdAt: -1 }); // Sort by createdAt descending
         res.status(200).json(billingDetails);
     } catch (error) {
         console.error('Error fetching billing details:', error);
@@ -275,7 +270,7 @@ router.get('/date-range', authMiddleware, async (req, res) => {
 router.get('/customer/:customerId', authMiddleware, async (req, res) => {
     const customerId = req.params.customerId;
     try {
-        const billingDetails = await billingDetailsModel.find({ customer: customerId })
+        const billingDetails = await billingDetailsModel.findOne({ userId: customerId },{customerName: 1, customerEmail: 1, customerPhone: 1, customerAddress: 1, customerNotes: 1, }).sort({ createdAt: -1 })
             // .populate('billingDetails.billingItems', 'name quantity unitPrice totalPrice description tax discount')
             // .populate('category', 'name')
             // .populate('financialYear', 'year')
