@@ -17,6 +17,8 @@ const errorLogRoutes = require('./routes/errorLog');
 let billingCategory = require('./routes/billingCategory'); // Ensure the path to billing category model is correct
 let financialYear = require('./routes/financialYear'); // Ensure the path to financial year routes is correct
 let billingItems = require('./routes/billingItems'); // Ensure the path to billing items routes is correct
+let billing = require('./routes/billing'); // Ensure the path to billing routes is correct
+let dashboard = require('./routes/dashboard'); // Ensure the path to dashboard routes is correct
 const bodyParser = require('body-parser');
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
@@ -44,7 +46,9 @@ app.use(process.env.API_BASE_URL+'/userPermission', userPermission);
 app.use(process.env.API_BASE_URL+'/settings', setting);
 app.use(process.env.API_BASE_URL+'/financialYear', financialYear);
 app.use(process.env.API_BASE_URL+'/billingItems', billingItems);
+app.use(process.env.API_BASE_URL+'/billing', billing);
 app.use(process.env.API_BASE_URL+'/billingCategory', billingCategory);
+app.use(process.env.API_BASE_URL+'/dashboard', dashboard);
 
 
 app.use(process.env.API_BASE_URL+'/static', express.static('uploads'))

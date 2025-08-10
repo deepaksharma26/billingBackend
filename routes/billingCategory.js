@@ -38,16 +38,18 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
 // Update a category
 router.put('/categories/:id', authMiddleware, upload.single('image'), async (req, res) => {
   const { id } = req.params;
-  const { name, description } = req.body;
+  const { name, description, isActive } = req.body;
+  console.log('Update request received for category ID:', req.body);
   const image = req.file ? req.file.path : null; // Get the uploaded file path      
     const updatedBy = req.user.id; // Assuming req.user contains the authenticated user's info
     try {
-        const category = await billingCategoryModel.findById(id);
+        const category = await billingCategoryModel.findById({_id: id});
         if (!category) {
             return res.status(404).json({ message: 'Category not found' });
         }
         category.name = name || category.name;  
         category.description = description || category.description;
+        category.isActive = isActive || category.isActive; // Update isActive only if provided
         category.image = image || category.image; // Update image if provided
         category.updatedBy = updatedBy; // Update the updater info
         category.updatedAt = Date.now(); // Update the timestamp
@@ -62,11 +64,11 @@ router.put('/categories/:id', authMiddleware, upload.single('image'), async (req
 router.delete('/categories/:id', authMiddleware, async (req, res) => {          
     const { id } = req.params;
     try {
-        const category = await billingCategoryModel.findById(id);
+        const category = await billingCategoryModel.findById({_id: id});
         if  (!category) {
             return res.status(404).json({ message: 'Category not found' });
         }
-        await categoryModel.deleteOne({ _id: id });
+        await billingCategoryModel.deleteOne({ _id: id });
         res.status(200).json({ message: 'Category deleted successfully' });
     } catch (error) {
         console.error('Error deleting category:', error);
