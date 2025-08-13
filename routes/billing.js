@@ -3,6 +3,7 @@ let router = express.Router();
 let authMiddleware = require('../middleware/auth'); 
 let billingDetailsModel = require('../model/billingDetailsModel'); 
 let paymentTypeModel = require('../model/paymentTypeModel'); 
+let User = require('../model/userSchema'); // Ensure the path to userSchema is correct
 
 
 // Create a new billing detail
@@ -46,7 +47,7 @@ router.post('/', authMiddleware, async (req, res) => {
             details,
             billingDetails: billingDetails.map(item => ({
                 ...item, 
-                totalPrice: item.unitPrice * item.quantity + (item.tax || 0) - (item.discount || 0)
+                // totalPrice: item.unitPrice * item.quantity + (item.tax || 0) - (item.discount || 0)
             })),
             category,
             invoiceNumber,
@@ -55,7 +56,7 @@ router.post('/', authMiddleware, async (req, res) => {
             taxAmount: parseFloat(taxAmount) || 0,
             discountAmount: parseFloat(discountAmount) || 0,
             finalAmount: parseFloat(finalAmount),
-            currency: currency || 'USD',
+            currency: currency || 'INR',
             paymentStatus: paymentStatus || 'Pending',
             customerName,
             customerEmail,
@@ -68,7 +69,7 @@ router.post('/', authMiddleware, async (req, res) => {
             nextBillingDate: new Date(nextBillingDate),
             createdBy: req?.user?.id ?  req.user.id :'System', // Use System if user ID is not available" , 
         });
-
+        console.log('Creating billing detail:', billingDetail);
         // Save the billing detail to the database
         await billingDetail.save();
         res.status(201).json(billingDetail);
@@ -193,33 +194,27 @@ router.get('/user/:userId', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
-// Get a billing detail by ID
-router.get('/:id', authMiddleware, async (req, res) => {
-    const billingDetailId = req.params.id;
-    console.log('Fetching billing detail with ID:', billingDetailId);
-    try {
-        const billingDetail = await billingDetailsModel.findById({ "_id": billingDetailId})
-            // .populate('billingDetails.billingItems', 'name quantity unitPrice totalPrice description tax discount')
-            // .populate('category', 'name')
-            // .populate('financialYear', 'year')
-            // .populate('paymentMethod', 'name')      
-            // .populate('createdBy', 'username')
-            // .populate('updatedBy', 'username'); 
-        if (!billingDetail) {
-            return res.status(404).json({ message: 'Billing detail not found' });
-        }
-        res.status(200).json(billingDetail);
-    } catch (error) {
-        console.error('Error fetching billing detail:', error);
-        res.status(500).json({ message: 'Server error' });
-    }     
-});
+
 //get all billing details
 router.get('/', authMiddleware, async (req, res) => {
-    console.log('Fetching all billing details', req.user);
     try {
-        const billingDetails = await billingDetailsModel.find({})
-            .sort({ createdAt: -1 }); // Sort by createdAt descending
+        const billingDetails = await billingDetailsModel.aggregate([
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: 'users', // Ensure this matches your MongoDB collection name
+                    localField: 'createdBy',
+                    foreignField: '_id',
+                    as: 'userDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$userDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            }
+        ]);
         res.status(200).json(billingDetails);
     } catch (error) {
         console.error('Error fetching billing details:', error);
@@ -245,6 +240,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 //billing details by date range
 router.get('/date-range', authMiddleware, async (req, res) => {
     const { startDate, endDate } = req.query;
+    console.log('Fetching billing details by date range:', startDate, endDate);
     try {
         const billingDetails = await billingDetailsModel.find({
             billingDate: {
@@ -283,6 +279,26 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 }); 
-
+// Get a billing detail by ID
+router.get('/:id', authMiddleware, async (req, res) => {
+    const billingDetailId = req.params.id;
+    console.log('Fetching billing detail with ID:', billingDetailId);
+    try {
+        const billingDetail = await billingDetailsModel.findById({ "_id": billingDetailId})
+            // .populate('billingDetails.billingItems', 'name quantity unitPrice totalPrice description tax discount')
+            // .populate('category', 'name')
+            // .populate('financialYear', 'year')
+            // .populate('paymentMethod', 'name')      
+            // .populate('createdBy', 'username')
+            // .populate('updatedBy', 'username'); 
+        if (!billingDetail) {
+            return res.status(404).json({ message: 'Billing detail not found' });
+        }
+        res.status(200).json(billingDetail);
+    } catch (error) {
+        console.error('Error fetching billing detail:', error);
+        res.status(500).json({ message: 'Server error' });
+    }     
+});
 
 module.exports = router; // Export the billing routes

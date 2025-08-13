@@ -43,7 +43,7 @@ const userModel = mongoose.Schema(
     lastname: { type: String, required: true },
     mobilenumber: { type: String, required: true, unique: true },
     status: { type: Number, default: 0 }, // Default status is 'active' 
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'userRoles'}, // Default role is
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'userRoles', default: '688773de3f5141eed42d4102' }, // Default role is
     user: {type: Number, default:0},//(0: user, 1: admin, 2: superadmin),
     token: { type: String, default: '' }, // JWT token for authentication
     profilePicture: { type: String, default: '' }, // URL to profile picture
