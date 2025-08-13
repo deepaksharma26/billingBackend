@@ -13,7 +13,9 @@ let secret = process.env.JWT_SECRET; // Replace with your actual secret key
 //get all users route
 router.get('/users', authMiddleware, async (req, res) => {
   try {
-    const users = await User.find({}, {
+    console.log('Fetching all users',req.user?.data?.role);
+    const condition = req.user?.data?.role === '688773f63f5141eed42d4104' || req.user?.data?.role === '688773de3f5141eed42d4102' ? {} : { createdBy:  req.user?.data?.id }; // Exclude current user if not superadmin
+    const users = await User.find(condition, {
       firstname: 1,
       lastname: 1,
       username: 1,
@@ -97,7 +99,7 @@ router.post('/register', async (req, res) => {
         lastname: lastname,
         mobilenumber: req.body.mobilenumber,
         status: status || false, // Default to false if not provided
-        role: role || 0, // Default to 0 (user) if not provided
+        role: role || '688773de3f5141eed42d4102', // Default to '688773de3f5141eed42d4102' (user) if not provided
         createdBy: req.user ? req.user.id : 'self', // Assuming req.user contains the authenticated user's info
         createdAt: new Date(),
         username: username,
